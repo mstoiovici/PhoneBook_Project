@@ -6,8 +6,15 @@ Created on Mon Jan 28 12:14:30 2019
 """
 
 import sqlite3
+import os
+from PhoneBook_Project_functions import *
 
-def getdb(environment):
+def check_if_db_exists(db_path):
+    if os.path.exists(db_path):
+        return True
+    else:
+        return False
+def getCursor(environment):
     conn=sqlite3.connect("{}_phoneBookProject.db".format(environment))
     cursor=conn.cursor()
     return cursor
@@ -22,3 +29,5 @@ def findBusinessType(c):
 
 
 #findBusinessType(getdb("mariana"))
+
+
