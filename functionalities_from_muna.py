@@ -9,18 +9,35 @@ Created on Thu Jan 31 13:56:39 2019
 
 import sqlite3
 import os
-from PhoneBook_Project_functions2_from_Muna import *
+from PhoneBook_Project_functions import *
 import requests
 from math import sin, cos, sqrt, atan2, radians
 from collections import defaultdict
 
-
-def check_db(db_path):
-    if os.path.exists(db_path):
+def main_functionalities(environment):
+    if check_db(environment):
+        cursor, connection= get_cursor(environment)
+#        business_type=get_business_type()
+        business_type=check_if_input_business_type_is_in_database(cursor)
+        long1, lat1=get_input_postcode_and_coordinates_for_input_postcode()
+        businesses_info_list=get_information_for_businesses_with_input_business_type(cursor,business_type)
+        businesses_info_list_with_distance=distance(businesses_info_list,long1,lat1)
+        result=convert_businesses_info_list_into_dictionary(businesses_info_list_with_distance )
+        sorted_result=sort_result_by_distance(result)
+    else:
+        print("The path to this database is not available")
+    return sorted_result
+        
+            
+    
+def check_db(environment):
+    if os.path.exists("{}_phoneBookProject.db".format(environment)):
         return True
     else:
         return False
 
+#This function does not need to be run in this file, it's only purpose is to test it
+#with unit test to check if the connection exists. This connection_factory(environment) should have been already tested with unittest in a real work scenario.
 def get_cursor(environment):
     cursor, connection = connection_factory(environment)
     return cursor, connection
@@ -41,27 +58,31 @@ def get_business_type():
             return business_type
         
             
-def check_if_input_business_type_is_in_database():  
-    cursor, connection = connection_factory("mariana")
+def check_if_input_business_type_is_in_database(cursor):  
+    
     while True:
         try:
-            business_type=get_business_type()
-            if business_type != None:
-#                query = "SELECT business_category FROM businesses WHERE =?"
-                cursor.execute("SELECT business_category FROM businesses WHERE business_category=?", (business_type,))
-                results = cursor.fetchall()
-#                print(results)
+            business_type=input("Please specify the business type:\n").title()
+            print("hello1",business_type,cursor)
+#            if business_type:
+            cursor.execute("SELECT business_category FROM businesses WHERE business_category=?", (business_type,))
+            results = cursor.fetchall()
+            print(results)
 #                print(type(results))
-                for index in range(len(results)-1):
-                    if business_type in results[index]:
-                        print("Mariana is the best.")
-                        return business_type
-                    else:
-                        print("Muna is the best!")
-                        raise not_in_database
+            print("hello")
+            for index in range(len(results)-1):
+                
+                if business_type in results[index]:
+                    print("Mariana is the best.")
+                    return business_type
+                else:
+                    print("Muna is the best!")
+                    raise not_in_database
+            
 
-        except Exception as not_in_database:
+        except Exception as e:
             print("That is not a valid business type.")
+    
         
 #check_if_input_business_type_is_in_database()                        
                 
@@ -75,19 +96,19 @@ def get_input_postcode_and_coordinates_for_input_postcode():
             postcode_response=requests.get(endpoint_postcode+input_postcode)
             data_postcode=postcode_response.json()
             if data_postcode['status'] ==200:
-                latitude=data_postcode['result']['latitude']
-                longitude=data_postcode["result"]["longitude"]
-                print(longitude, latitude)
-                return longitude, latitude
+                lat1=data_postcode['result']['latitude']
+                long1=data_postcode["result"]["longitude"]
+                print(long1, lat1)
+                return long1, lat1
             else:
                 raise postcode_not_valid
                 
         except Exception as postcode_not_valid: 
             print("The postcode you provided is not valid!")
 
-def get_information_for_businesses_with_input_business_type():
-    cursor, connection = connection_factory("mariana")
-    business_type=check_if_input_business_type_is_in_database()
+def get_information_for_businesses_with_input_business_type(cursor,business_type):
+    
+  
     cursor.execute("SELECT business_name, telephone_number, postcode FROM businesses WHERE business_category=?", (business_type,)) 
     results = cursor.fetchall()
     businesses_info_list=[]
@@ -120,9 +141,9 @@ def get_coordinates_for_postcode(postcode):
         print("The postcode you provided is not valid!")
         
     
-def distance():
-    businesses_info_list=get_information_for_businesses_with_input_business_type()
-    long1,lat1=get_input_postcode_and_coordinates_for_input_postcode()
+def distance(businesses_info_list,long1,lat1):
+    
+    
     for index in range(len(businesses_info_list)-1):
         long2=businesses_info_list[index][3]
         lat2=businesses_info_list[index][4]
@@ -138,8 +159,9 @@ def distance():
         businesses_info_list[index].append(hdist)
 #        print(businesses_info_list[index])
 #    print (businesses_info_list)
-    result=convert_businesses_info_list_into_dictionary(businesses_info_list)
-    return result
+    
+    print("I'm here")
+    return businesses_info_list
 
 
 def convert_businesses_info_list_into_dictionary(businesses_info_list ):
@@ -149,22 +171,22 @@ def convert_businesses_info_list_into_dictionary(businesses_info_list ):
         list1= businesses_info_list[index]
 #    print(list1)
         d[list1[0]] += list1[1:]
-    print(dict(d))
+    #print(dict(d))
+    d=dict(d)
+    return d
 
 
-def sort_result_by_distance():
-    result= distance()
+def sort_result_by_distance(result):
+   
     sorted_result = sorted(result.items(),key=lambda kv:kv[1][-1])
-#    print(sorted_result)
+    print(sorted_result)
     return sorted_result
 
 
 
 
 
-
-
-
+#main_functionalities("mariana")
 
 
 
@@ -433,4 +455,4 @@ def sort_result_by_distance():
 #            if count >=50:
 #                break        
 #        
-#searchBusinessTypex() 
+#searchBusinessTypex()   
