@@ -17,7 +17,6 @@ from collections import defaultdict
 def main_functionalities(environment):
     if check_db(environment):
         cursor, connection= get_cursor(environment)
-#        business_type=get_business_type()
         business_type=check_if_input_business_type_is_in_database(cursor)
         long1, lat1=get_input_postcode_and_coordinates_for_input_postcode()
         businesses_info_list=get_information_for_businesses_with_input_business_type(cursor,business_type)
@@ -42,49 +41,32 @@ def get_cursor(environment):
     cursor, connection = connection_factory(environment)
     return cursor, connection
 
-def get_business_type():
-    while True:
-        try:
-            business_type=input("Please specify the business type:\n").title()
-            if business_type.isdigit():
-                raise character_error
-
-        except Exception as character_error:
-            print("Please only use characters.")
-        except Exception:
-            print("That business type is not valid, please try again.")
-        else:
-            print (business_type)
-            return business_type
-        
             
 def check_if_input_business_type_is_in_database(cursor):  
     
     while True:
         try:
             business_type=input("Please specify the business type:\n").title()
-            print("hello1",business_type,cursor)
-#            if business_type:
+#            print("hello1",business_type,cursor)
+#            print(type(cursor))
+            if business_type.isdigit():
+                raise character_error
             cursor.execute("SELECT business_category FROM businesses WHERE business_category=?", (business_type,))
             results = cursor.fetchall()
-            print(results)
-#                print(type(results))
-            print("hello")
             for index in range(len(results)-1):
                 
                 if business_type in results[index]:
-                    print("Mariana is the best.")
+#                    print("Mariana is the best.")
                     return business_type
                 else:
-                    print("Muna is the best!")
-                    raise not_in_database
+#                    print("Muna is the best!")
+                    raise Exception
             
-
+        except Exception as character_error:
+            print("Please only use characters.")
         except Exception as e:
-            print("That is not a valid business type.")
-    
-        
-#check_if_input_business_type_is_in_database()                        
+            print(e)
+                 
                 
               
 def get_input_postcode_and_coordinates_for_input_postcode():
@@ -98,7 +80,7 @@ def get_input_postcode_and_coordinates_for_input_postcode():
             if data_postcode['status'] ==200:
                 lat1=data_postcode['result']['latitude']
                 long1=data_postcode["result"]["longitude"]
-                print(long1, lat1)
+#                print(long1, lat1)
                 return long1, lat1
             else:
                 raise postcode_not_valid
@@ -112,6 +94,8 @@ def get_information_for_businesses_with_input_business_type(cursor,business_type
     cursor.execute("SELECT business_name, telephone_number, postcode FROM businesses WHERE business_category=?", (business_type,)) 
     results = cursor.fetchall()
     businesses_info_list=[]
+#    print(results)
+#    print(type(results))
     for row in results:
 #        print(row)
         row=list(row)
@@ -125,7 +109,7 @@ def get_information_for_businesses_with_input_business_type(cursor,business_type
         row.extend(coordinates)
 #        print(row)
         businesses_info_list.append(row)
-    print(businesses_info_list)
+#    print(businesses_info_list)
     return businesses_info_list
 
 def get_coordinates_for_postcode(postcode):
@@ -138,29 +122,32 @@ def get_coordinates_for_postcode(postcode):
 #        print(longitude, latitude)
         return longitude, latitude
     else:
-        print("The postcode you provided is not valid!")
+        print("The postcode you provided is not valid!!!!")
+   
         
     
 def distance(businesses_info_list,long1,lat1):
     
-    
+   
     for index in range(len(businesses_info_list)-1):
         long2=businesses_info_list[index][3]
         lat2=businesses_info_list[index][4]
         R = 6373.0 # approximate radius of earth in km
+        
         dlon, dlat = radians(long2) - radians(long1), radians(lat2) - radians(lat1)
         a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
         a=abs(a)
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         hdist = R * c
         hdist=int(hdist)
-#        print(hdist)
-#        print(businesses_info_list[index])
+    #        print(hdist)
+    #        print(businesses_info_list[index])
+        
         businesses_info_list[index].append(hdist)
 #        print(businesses_info_list[index])
 #    print (businesses_info_list)
     
-    print("I'm here")
+#    print("I'm here")
     return businesses_info_list
 
 
@@ -179,9 +166,8 @@ def convert_businesses_info_list_into_dictionary(businesses_info_list ):
 def sort_result_by_distance(result):
    
     sorted_result = sorted(result.items(),key=lambda kv:kv[1][-1])
-    print(sorted_result)
+#    print(sorted_result)
     return sorted_result
-
 
 
 
